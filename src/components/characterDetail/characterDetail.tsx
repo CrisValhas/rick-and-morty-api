@@ -26,7 +26,7 @@ const CharacterDetail: FC = () => {
   }, [id]);
 
   return (
-    <div className="container">
+    <div className="container-detail">
       <button onClick={() => window.history.back()} className="button">
         Back
       </button>
