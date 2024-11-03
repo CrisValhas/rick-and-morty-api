@@ -43,7 +43,8 @@
   },
   "devDependencies": {
     "typescript": "^4.0.0",
-    "@typescript-eslint/parser": "^4.0.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "eslint": "^8.57.1",
     "@babel/plugin-proposal-private-property-in-object": "^7.14.5",
     "customize-cra": "^1.0.0",
     "react-app-rewired": "^2.2.1"
