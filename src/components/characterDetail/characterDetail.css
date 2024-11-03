@@ -1,0 +1,45 @@
+.container {
+    padding: 16px;
+}
+
+.button {
+    margin-bottom: 16px;
+    padding: 8px 16px;
+    background-color: #3f51b5;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.button:hover {
+    background-color: #303f9f;
+}
+
+.character-detail {
+    display: flex;
+    align-items: center;
+}
+
+.character-image {
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    margin-right: 16px;
+}
+
+.character-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.character-info h1 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.character-info p {
+    margin: 4px 0;
+}
