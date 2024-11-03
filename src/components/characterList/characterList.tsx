@@ -177,7 +177,9 @@ const CharacterList: React.FC = () => {
           </button>
         </div>) : !(loading || pageLoader) && (<div className="container">
           <button
-            onClick={() => (history('/'), clearFilters())}
+            onClick={() => {
+              history('/') ;
+              clearFilters()}}
             className="button"
           >
             Back
