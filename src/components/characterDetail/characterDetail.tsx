@@ -1,11 +1,12 @@
-import React, { FC, useEffect, useState } from 'react';
-import './characterDetail.css'
-import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { FC, useEffect, useState } from "react";
+import "./characterDetail.css";
+import axios from "axios";
+import { useParams } from "react-router-dom";
+import Skeleton from "../skeleton/skeleton.tsx";
 
 interface Character {
   id: number;
-  name: string; us
+  name: string;
   status: string;
   species: string;
   gender: string;
@@ -17,7 +18,6 @@ interface Character {
 const CharacterDetail: FC = () => {
   const { id } = useParams<{ id: string }>();
   const [character, setCharacter] = useState<Character | null>(null);
-  const history = useNavigate();
 
   useEffect(() => {
     axios
@@ -25,30 +25,33 @@ const CharacterDetail: FC = () => {
       .then((response) => setCharacter(response.data));
   }, [id]);
 
-  if (!character) return <div>Loading...</div>;
-
   return (
     <div className="container">
-      <button
-        onClick={() => history('/')}
-        className="button"
-      >
+      <button onClick={() => window.history.back()} className="button">
         Back
       </button>
-      <div className="character-detail">
-        <img src={character.image} alt={character.name} className="character-image" />
-        <div className="character-info">
-          <h1>{character.name}</h1>
-          <p>Status: {character.status}</p>
-          <p>Species: {character.species}</p>
-          <p>Gender: {character.gender}</p>
-          <p>Origin: {character.origin.name}</p>
-          <p>Location: {character.location.name}</p>
-          {character.location.type === 'Dimension' && (
-            <p>Dimension: {character.location.name}</p>
-          )}
+      {!character ? (
+        <Skeleton nColumnas={11} />
+      ) : (
+        <div className="character-detail">
+          <img
+            src={character.image}
+            alt={character.name}
+            className="character-image"
+          />
+          <div className="character-info">
+            <h1>{character.name}</h1>
+            <p>Status: {character.status}</p>
+            <p>Species: {character.species}</p>
+            <p>Gender: {character.gender}</p>
+            <p>Origin: {character.origin.name}</p>
+            <p>Location: {character.location.name}</p>
+            {character.location.type === "Dimension" && (
+              <p>Dimension: {character.location.name}</p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

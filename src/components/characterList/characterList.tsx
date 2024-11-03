@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useQuery, gql } from '@apollo/client';
-import { Link, useNavigate } from 'react-router-dom';
-import './characterList.css';
-import useDebounce from '../../hooks/useDebounce.ts';
+import React, { useState, useRef, useEffect } from "react";
+import { useQuery, gql } from "@apollo/client";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import "./characterList.css";
+import useDebounce from "../../hooks/useDebounce.ts";
+import Skeleton from "../skeleton/skeleton.tsx";
 
 interface Character {
   id: number;
@@ -16,8 +17,16 @@ interface Character {
 }
 
 const GET_CHARACTERS = gql`
-  query GetCharacters($page: Int, $name: String, $status: String, $gender: String) {
-    characters(page: $page, filter: { name: $name, status: $status, gender: $gender }) {
+  query GetCharacters(
+    $page: Int
+    $name: String
+    $status: String
+    $gender: String
+  ) {
+    characters(
+      page: $page
+      filter: { name: $name, status: $status, gender: $gender }
+    ) {
       info {
         pages
       }
@@ -40,13 +49,23 @@ const GET_CHARACTERS = gql`
 `;
 
 const CharacterList: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [filter, setFilter] = useState({ name: '', status: '', gender: '' });
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const [page, setPage] = useState(Number(queryParams.get("page")) || 1);
+  const [filter, setFilter] = useState({
+    name: queryParams.get("name") || "",
+    status: queryParams.get("status") || "",
+    gender: queryParams.get("gender") || "",
+  });
   const debouncedFilter = useDebounce(filter, 600);
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const history = useNavigate();
   const [loading, setLoading] = useState(false);
-  const { loading: pageLoader, error, data } = useQuery(GET_CHARACTERS, {
+  const {
+    loading: pageLoader,
+    error,
+    data,
+  } = useQuery(GET_CHARACTERS, {
     variables: { page, ...debouncedFilter },
   });
 
@@ -55,31 +74,42 @@ const CharacterList: React.FC = () => {
       nameInputRef.current.focus();
     }
   }, [debouncedFilter]);
+
   useEffect(() => {
-    setLoading(false)
+    const params = new URLSearchParams();
+    params.set("page", String(page));
+    if (filter.name) params.set("name", filter.name);
+    if (filter.status) params.set("status", filter.status);
+    if (filter.gender) params.set("gender", filter.gender);
+    navigate({ search: params.toString() });
+  }, [page, filter, navigate]);
+
+  useEffect(() => {
+    setLoading(false);
   }, [data]);
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setPage(1);
     setFilter({ ...filter, [e.target.name]: e.target.value });
   };
 
   const handleDropdownChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setLoading(true)
+    setLoading(true);
     setPage(1);
     setFilter({ ...filter, [e.target.name]: e.target.value });
   };
 
   const clearFilters = () => {
-    setLoading(true)
-    setFilter({ name: '', status: '', gender: '' });
+    setFilter({ name: "", status: "", gender: "" });
     setPage(1);
   };
 
   if (error) {
-    console.log("Failed-api-connect")
-    return <div className="skeleton-box">Error: {error.message}</div>
-  };
+    console.log("Failed-api-connect");
+    return <div className="skeleton-box">Error: {error.message}</div>;
+  }
 
   const characters: Character[] = data?.characters?.results;
   const totalPages = data?.characters?.info.pages;
@@ -87,10 +117,12 @@ const CharacterList: React.FC = () => {
   return (
     <div className="container">
       <div className="filter-container">
-        <div className='logo-container'> Api Rick And Morty</div>
-        <button onClick={clearFilters} disabled={(filter.gender === '' && filter.name === '' && filter.status === '')} className="button clear-button">Clear Filters</button>
+        <div className="logo-container">Api Rick And Morty</div>
+        <button onClick={clearFilters} className="button clear-button">
+          Reset
+        </button>
       </div>
-      <div className='table-body'>
+      <div className="table-body">
         <table className="table">
           <thead className="thead">
             <tr>
@@ -138,56 +170,73 @@ const CharacterList: React.FC = () => {
               <th>Location</th>
             </tr>
           </thead>
-          <tbody >
-            {(loading || pageLoader) ? <div className="skeleton-container">
-              {Array.from({ length: 10 }, (_, index) => (
-                <div className="skeleton-box" key={index} />
-              ))}
-              <p>Loading...</p>
-            </div> : characters.length ? characters?.map((character) => (
-              <tr key={character.id}>
-                <td className='link'>
-                  {character.id}
-                  <img src={character.image} alt={character.name} className="character-image-list" />
-                </td>
-                <td>
-                  <Link className='link' to={`/character/${character.id}`}>
-                    {character.name}
-                  </Link>
-                </td>
-                <td>{character.status}</td>
-                <td>{character.species}</td>
-                <td>{character.gender}</td>
-                <td>{character.origin.name}</td>
-                <td>{character.location.name}</td>
-              </tr>
-            )) : <div className="empty-container">sin resultados</div>}
+          <tbody>
+            {loading || pageLoader ? (
+              <Skeleton nColumnas={11} />
+            ) : characters.length ? (
+              characters.map((character) => (
+                <tr key={character.id}>
+                  <td className="link">
+                    {character.id}
+                    <img
+                      src={character.image}
+                      alt={character.name}
+                      className="character-image-list"
+                    />
+                  </td>
+                  <td>
+                    <Link
+                      className="link"
+                      to={`/character/${character.id}?page=${page}&name=${filter.name}&status=${filter.status}&gender=${filter.gender}`}
+                    >
+                      {character.name}
+                    </Link>
+                  </td>
+                  <td>{character.status}</td>
+                  <td>{character.species}</td>
+                  <td>{character.gender}</td>
+                  <td>{character.origin.name}</td>
+                  <td>{character.location.name}</td>
+                </tr>
+              ))
+            ) : (
+              <div className="empty-container">sin resultados</div>
+            )}
           </tbody>
-
         </table>
       </div>
-      {totalPages ?
-        (<div className="pagination-container">
-          <button onClick={() => setPage(page - 1)} className="button" disabled={page === 1}>
-            Previous
-          </button>
-          <span>{`${page} ${totalPages ? 'of' : ''} ${totalPages ? totalPages : ''}`}</span>
-          <button onClick={() => setPage(page + 1)} className="button" disabled={!totalPages || page === totalPages}>
-            Next
-          </button>
-        </div>) : !(loading || pageLoader) && (<div className="container">
+      <div className="pagination-container">
+        <button
+          onClick={() => setPage(page - 1)}
+          className="button"
+          disabled={page === 1}
+        >
+          Previous
+        </button>
+        <span>{`${page} ${totalPages ? "of" : ""} ${
+          totalPages ? totalPages : ""
+        }`}</span>
+        <button
+          onClick={() => setPage(page + 1)}
+          className="button"
+          disabled={!totalPages || page === totalPages}
+        >
+          Next
+        </button>
+        {!totalPages && !(loading || pageLoader) && (
           <button
             onClick={() => {
-              history('/') ;
-              clearFilters()}}
+              clearFilters();
+              window.history.back();
+            }}
             className="button"
           >
             Back
           </button>
-        </div>)}
+        )}
+      </div>
     </div>
   );
-
 };
 
 export default CharacterList;
